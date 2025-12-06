@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, simpledialog
 from datetime import datetime
 
 
@@ -73,7 +73,7 @@ class VentanaPrincipal(tk.Tk):
 
     def abrir_salida(self):
         try:
-            numero_habitacion = tk.simpledialog.askinteger("Salida de huéspedes", 
+            numero_habitacion = simpledialog.askinteger("Salida de huéspedes", 
                                                            "Ingrese número de habitación",
                                                            minvalue=1, maxvalue=10)
             if numero_habitacion is None:
