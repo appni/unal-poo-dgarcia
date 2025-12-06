@@ -222,7 +222,5 @@ class VentanaPrincipal(tk.Tk):
             except Exception as e:
                 messagebox.showerror("Error", f"Error al guardar el archivo: {str(e)}")
 
-
-if __name__ == "__main__":
-    app = VentanaPrincipal()
-    app.mainloop()
+app = VentanaPrincipal()
+app.mainloop()
