@@ -246,8 +246,6 @@ class VentanaSalida(tk.Toplevel):
         messagebox.showinfo("Mensaje", "Se ha registrado la salida del huésped")
         self.destroy()
 
-
-if __name__ == "__main__":
-    hotel = Hotel()
-    app = VentanaPrincipal(hotel)
-    app.mainloop()
+hotel = Hotel()
+app = VentanaPrincipal(hotel)
+app.mainloop()
