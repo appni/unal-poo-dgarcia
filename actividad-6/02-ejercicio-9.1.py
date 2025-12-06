@@ -1,6 +1,94 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
+import calendar
+
+
+class DatePicker(tk.Toplevel):
+    def __init__(self, parent, callback):
+        super().__init__(parent)
+        self.callback = callback
+        self.title("Seleccionar Fecha")
+        self.geometry("300x280")
+        self.resizable(False, False)
+        self.grab_set()
+        
+        self.selected_date = datetime.now()
+        self.create_widgets()
+        
+    def create_widgets(self):
+        control_frame = tk.Frame(self)
+        control_frame.pack(pady=10)
+        
+        tk.Button(control_frame, text="◀", command=self.prev_month, width=3).pack(side=tk.LEFT, padx=5)
+        
+        self.month_year_label = tk.Label(control_frame, text="", font=("Arial", 12, "bold"), width=15)
+        self.month_year_label.pack(side=tk.LEFT, padx=10)
+        
+        tk.Button(control_frame, text="▶", command=self.next_month, width=3).pack(side=tk.LEFT, padx=5)
+        
+        self.calendar_frame = tk.Frame(self)
+        self.calendar_frame.pack(padx=10, pady=10)
+        
+        self.update_calendar()
+        
+        button_frame = tk.Frame(self)
+        button_frame.pack(pady=10)
+        
+        tk.Button(button_frame, text="Hoy", command=self.select_today, width=10).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame, text="Cancelar", command=self.destroy, width=10).pack(side=tk.LEFT, padx=5)
+        
+    def update_calendar(self):
+        for widget in self.calendar_frame.winfo_children():
+            widget.destroy()
+            
+        month_name = calendar.month_name[self.selected_date.month]
+        self.month_year_label.config(text=f"{month_name} {self.selected_date.year}")
+        
+        days = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"]
+        for i, day in enumerate(days):
+            tk.Label(self.calendar_frame, text=day, font=("Arial", 9, "bold"), width=4).grid(row=0, column=i)
+        
+        cal = calendar.monthcalendar(self.selected_date.year, self.selected_date.month)
+        
+        for week_num, week in enumerate(cal, start=1):
+            for day_num, day in enumerate(week):
+                if day == 0:
+                    tk.Label(self.calendar_frame, text="", width=4).grid(row=week_num, column=day_num)
+                else:
+                    btn = tk.Button(self.calendar_frame, text=str(day), width=4,
+                                  command=lambda d=day: self.select_day(d))
+                    
+                    if (day == self.selected_date.day and 
+                        datetime.now().month == self.selected_date.month and 
+                        datetime.now().year == self.selected_date.year):
+                        btn.config(bg="lightblue")
+                    
+                    btn.grid(row=week_num, column=day_num, padx=1, pady=1)
+    
+    def prev_month(self):
+        if self.selected_date.month == 1:
+            self.selected_date = self.selected_date.replace(year=self.selected_date.year - 1, month=12, day=1)
+        else:
+            self.selected_date = self.selected_date.replace(month=self.selected_date.month - 1, day=1)
+        self.update_calendar()
+    
+    def next_month(self):
+        if self.selected_date.month == 12:
+            self.selected_date = self.selected_date.replace(year=self.selected_date.year + 1, month=1, day=1)
+        else:
+            self.selected_date = self.selected_date.replace(month=self.selected_date.month + 1, day=1)
+        self.update_calendar()
+    
+    def select_day(self, day):
+        self.selected_date = self.selected_date.replace(day=day)
+        self.callback(self.selected_date)
+        self.destroy()
+    
+    def select_today(self):
+        self.selected_date = datetime.now()
+        self.callback(self.selected_date)
+        self.destroy()
 
 
 class Contacto:
@@ -45,25 +133,17 @@ class VentanaContacto(tk.Tk):
         self.campo_apellidos = tk.Entry(grid_frame, width=25)
         self.campo_apellidos.grid(row=1, column=1, padx=5, pady=5)
 
-        tk.Label(grid_frame, text="Fecha nacimiento (YYYY-MM-DD):").grid(row=2, column=0, sticky=tk.W, padx=5, pady=5)
-        fecha_frame = tk.Frame(grid_frame)
-        fecha_frame.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
+        tk.Label(grid_frame, text="Fecha nacimiento:").grid(row=2, column=0, sticky=tk.W, padx=5, pady=5)
         
-        self.campo_year = ttk.Spinbox(fecha_frame, from_=1900, to=2100, width=6, format='%04.0f')
-        self.campo_year.set(datetime.now().year)
-        self.campo_year.pack(side=tk.LEFT, padx=2)
+        fecha_input_frame = tk.Frame(grid_frame)
+        fecha_input_frame.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
         
-        tk.Label(fecha_frame, text="-").pack(side=tk.LEFT)
+        self.campo_fecha = tk.Entry(fecha_input_frame, width=18, state='readonly')
+        self.campo_fecha.pack(side=tk.LEFT)
+        self.set_fecha(datetime.now())
         
-        self.campo_month = ttk.Spinbox(fecha_frame, from_=1, to=12, width=4, format='%02.0f')
-        self.campo_month.set(datetime.now().month)
-        self.campo_month.pack(side=tk.LEFT, padx=2)
-        
-        tk.Label(fecha_frame, text="-").pack(side=tk.LEFT)
-        
-        self.campo_day = ttk.Spinbox(fecha_frame, from_=1, to=31, width=4, format='%02.0f')
-        self.campo_day.set(datetime.now().day)
-        self.campo_day.pack(side=tk.LEFT, padx=2)
+        tk.Button(fecha_input_frame, text="📅", command=self.abrir_calendario, 
+                 font=("Arial", 10), width=3).pack(side=tk.LEFT, padx=2)
 
         tk.Label(grid_frame, text="Dirección:").grid(row=3, column=0, sticky=tk.W, padx=5, pady=5)
         self.campo_direccion = tk.Entry(grid_frame, width=25)
@@ -96,15 +176,19 @@ class VentanaContacto(tk.Tk):
 
         main_frame.grid_rowconfigure(0, weight=1)
         main_frame.grid_columnconfigure(2, weight=1)
+    
+    def abrir_calendario(self):
+        DatePicker(self, self.set_fecha)
+    
+    def set_fecha(self, fecha):
+        self.fecha_seleccionada = fecha
+        self.campo_fecha.config(state='normal')
+        self.campo_fecha.delete(0, tk.END)
+        self.campo_fecha.insert(0, fecha.strftime("%Y-%m-%d"))
+        self.campo_fecha.config(state='readonly')
 
     def obtener_fecha(self):
-        try:
-            year = int(self.campo_year.get())
-            month = int(self.campo_month.get())
-            day = int(self.campo_day.get())
-            return datetime(year, month, day).date()
-        except ValueError:
-            return None
+        return self.fecha_seleccionada.date() if hasattr(self, 'fecha_seleccionada') else None
 
     def mostrar_datos(self):
         nombres = self.campo_nombres.get().strip()
@@ -128,15 +212,10 @@ class VentanaContacto(tk.Tk):
 
             self.campo_nombres.delete(0, tk.END)
             self.campo_apellidos.delete(0, tk.END)
-            now = datetime.now()
-            self.campo_year.set(now.year)
-            self.campo_month.set(now.month)
-            self.campo_day.set(now.day)
+            self.set_fecha(datetime.now())
             self.campo_direccion.delete(0, tk.END)
             self.campo_telefono.delete(0, tk.END)
             self.campo_correo.delete(0, tk.END)
 
-
-if __name__ == "__main__":
-    app = VentanaContacto()
-    app.mainloop()
+app = VentanaContacto()
+app.mainloop()
